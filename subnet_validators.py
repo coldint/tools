@@ -6,6 +6,7 @@ import logging
 import numpy as np
 import sys
 import json
+import requests
 
 subtensor = None
 
@@ -19,6 +20,8 @@ def parse_args():
             help='Increase verbosity')
     parser.add_argument('--silent', '-s', default=False, action='store_true',
             help='Decrease verbosity')
+    parser.add_argument('--no-verified-map', default=False, action='store_true',
+            help="Don't fetch verified validator map")
 
     global args
     args = parser.parse_args()
@@ -63,7 +66,7 @@ def get_set_weight(subnet_id, hotkey, block_id):
     # Not found
     return None
 
-def print_subnet_validators(subnet_id):
+def print_subnet_validators(subnet_id, validator_map):
     mg = subtensor.metagraph(subnet_id, lite=True)
     stakes = mg.S
     uids = np.argsort(stakes)[::-1]
@@ -85,9 +88,11 @@ def print_subnet_validators(subnet_id):
                 version = '0x..' + ('%x'%version)[-4:]
         except Exception as e:
             pass
+        if hk in validator_map:
+            hk = f"{hk[:7]} {validator_map[hk]['name'][:42]}"
         dblocks = subtensor.block - upd
         w_info = f"version {str(version):8s}, #{upd}, {dblocks*12/60:-7.01f} min ago"
-        print(f"UID {uid:-4d}, stake {int(stake):-8d}, vtrust {vtrust[uid]:.03f}, {hk}, {w_info}")
+        print(f"UID {uid:-4d}, stake {int(stake):-8d}, vtrust {vtrust[uid]:.03f}, {hk:50s}, {w_info}")
 
 def main():
     parse_args()
@@ -97,7 +102,16 @@ def main():
     subtensor = bt.subtensor(network=args.network)
     logging.info('connected')
 
-    print_subnet_validators(args.subnet_id)
+    validator_map = {}
+    if not args.no_verified_map:
+        try:
+            ret = requests.get('https://raw.githubusercontent.com/opentensor/bittensor-delegates/main/public/delegates.json')
+            ret.raise_for_status()
+            validator_map = ret.json()
+        except:
+            logging.warning("Failed to fetch verified validator map")
+
+    print_subnet_validators(args.subnet_id, validator_map)
 
 if __name__ == '__main__':
     try:
