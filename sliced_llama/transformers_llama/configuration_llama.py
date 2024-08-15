@@ -21,14 +21,14 @@
 # limitations under the License.
 """ LLaMA model configuration"""
 
-from ...configuration_utils import PretrainedConfig
-from ...utils import logging
+from transformers.configuration_utils import PretrainedConfig
+from transformers.utils import logging
 
 
 logger = logging.get_logger(__name__)
 
 
-from ..deprecated._archive_maps import LLAMA_PRETRAINED_CONFIG_ARCHIVE_MAP  # noqa: F401, E402
+from transformers.models.deprecated._archive_maps import LLAMA_PRETRAINED_CONFIG_ARCHIVE_MAP  # noqa: F401, E402
 
 
 class LlamaConfig(PretrainedConfig):
