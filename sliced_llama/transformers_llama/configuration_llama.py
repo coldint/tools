@@ -164,6 +164,10 @@ class LlamaConfig(PretrainedConfig):
         self.attention_bias = attention_bias
         self.attention_dropout = attention_dropout
 
+        # sliced Llama features
+        self.start_at_layer = None
+        self.return_states_at_layer = None
+
         super().__init__(
             pad_token_id=pad_token_id,
             bos_token_id=bos_token_id,
